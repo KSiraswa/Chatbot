@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Chatbot</string>
+    <string name="accessibility_description">Used to extract screen content for the AI Chatbot.</string>
+</resources>
