@@ -13,8 +13,15 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.view.MotionEvent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import androidx.compose.runtime.Recomposer
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.compositionContext
 import androidx.core.app.NotificationCompat
@@ -35,15 +42,22 @@ import com.example.chatbot.data.ChatMessage
 import com.example.chatbot.ui.FloatingChatUI
 import kotlinx.coroutines.launch
 
-class FloatingChatService : LifecycleService(), ViewModelStoreOwner, SavedStateRegistryOwner {
+class FloatingChatService : LifecycleService(), ViewModelStoreOwner, SavedStateRegistryOwner, SensorEventListener {
 
     private lateinit var windowManager: WindowManager
     private lateinit var floatingView: View
     private var params: WindowManager.LayoutParams? = null
 
     private val chatMessages = mutableStateListOf<ChatMessage>().apply {
-        add(ChatMessage("Hello! I am your AI screen assistant. Click me to analyze this screen.", false))
+        add(ChatMessage("Hello! I am your AI screen assistant. Click me or SHAKE your phone to analyze this screen.", false))
     }
+    
+    private var isExpanded by mutableStateOf(false)
+    private lateinit var sensorManager: SensorManager
+    private var accelerometer: Sensor? = null
+    private var proximitySensor: Sensor? = null
+    private var lastShakeTime: Long = 0
+
     private lateinit var screenAnalyzer: ScreenAnalyzer
     private lateinit var geminiClient: GeminiClient
 
@@ -58,13 +72,24 @@ class FloatingChatService : LifecycleService(), ViewModelStoreOwner, SavedStateR
         get() = mSavedStateRegistryController.savedStateRegistry
 
     // Placeholder API Key - User should replace this
-    private val API_KEY = "AIzaSyBe2nHRDFK8rrT76iCjFVQV6FUoS62bAQQ"
+    private val API_KEY = "AIzaSyAyu5nlFkC0oSpsTssGmGvXagR7Qul8cgY"
 
     override fun onCreate() {
         super.onCreate()
         mSavedStateRegistryController.performRestore(null)
         screenAnalyzer = ScreenAnalyzer(this)
         geminiClient = GeminiClient(API_KEY)
+        
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY)
+
+        accelerometer?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+        }
+        proximitySensor?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+        }
         
         startForegroundService()
         initFloatingWindow()
@@ -99,12 +124,11 @@ class FloatingChatService : LifecycleService(), ViewModelStoreOwner, SavedStateR
             setContent {
                 FloatingChatUI(
                     messages = chatMessages,
+                    isExpanded = isExpanded,
+                    onToggleExpand = { toggleChat() },
                     onSendMessage = { text -> sendMessageToAI(text) },
                     onClose = { stopSelf() },
-                    onCaptureScreen = { captureAndSummarize() },
-                    onExpandStateChanged = { expanded ->
-                        updateWindowFocusable(expanded)
-                    }
+                    onCaptureScreen = { captureAndSummarize() }
                 )
             }
         }
@@ -198,8 +222,48 @@ class FloatingChatService : LifecycleService(), ViewModelStoreOwner, SavedStateR
         }
     }
 
+    private fun toggleChat() {
+        isExpanded = !isExpanded
+        updateWindowFocusable(isExpanded)
+        if (isExpanded) {
+            captureAndSummarize()
+        }
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        when (event?.sensor?.type) {
+            Sensor.TYPE_ACCELEROMETER -> {
+                val x = event.values[0]
+                val y = event.values[1]
+                val z = event.values[2]
+
+                val acceleration = Math.sqrt((x * x + y * y + z * z).toDouble()) - SensorManager.GRAVITY_EARTH
+                if (acceleration > 12) { // Shake sensitivity threshold
+                    val currentTime = System.currentTimeMillis()
+                    if (currentTime - lastShakeTime > 2000) { // 2 second cooldown
+                        lastShakeTime = currentTime
+                        if (!isExpanded) {
+                            toggleChat()
+                        }
+                    }
+                }
+            }
+            Sensor.TYPE_PROXIMITY -> {
+                val distance = event.values[0]
+                // distance < proximitySensor.maximumRange usually means "near"
+                // Most sensors return 0 for near and a larger value for far.
+                if (distance < (proximitySensor?.maximumRange ?: 5f) && isExpanded) {
+                    toggleChat() // Close it
+                }
+            }
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
     override fun onDestroy() {
         super.onDestroy()
+        sensorManager.unregisterListener(this)
         mViewModelStore.clear()
         if (::floatingView.isInitialized) windowManager.removeView(floatingView)
     }

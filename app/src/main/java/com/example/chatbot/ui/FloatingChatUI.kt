@@ -20,13 +20,12 @@ import com.example.chatbot.data.ChatMessage
 @Composable
 fun FloatingChatUI(
     messages: List<ChatMessage>,
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit,
     onSendMessage: (String) -> Unit,
     onClose: () -> Unit,
-    onCaptureScreen: () -> Unit,
-    onExpandStateChanged: (Boolean) -> Unit = {}
+    onCaptureScreen: () -> Unit
 ) {
-    var isExpanded by remember { mutableStateOf(false) }
-
     Column(horizontalAlignment = Alignment.End) {
         AnimatedVisibility(
             visible = isExpanded,
@@ -36,10 +35,7 @@ fun FloatingChatUI(
             ChatScreen(
                 messages = messages,
                 onSendMessage = onSendMessage,
-                onClose = { 
-                    isExpanded = false
-                    onExpandStateChanged(false)
-                }
+                onClose = onToggleExpand
             )
         }
 
@@ -50,16 +46,7 @@ fun FloatingChatUI(
             color = Color(0xFF00E5FF).copy(alpha = 0.8f),
             modifier = Modifier
                 .size(60.dp)
-                .clickable { 
-                    if (!isExpanded) {
-                        onCaptureScreen()
-                        isExpanded = true
-                        onExpandStateChanged(true)
-                    } else {
-                        isExpanded = false
-                        onExpandStateChanged(false)
-                    }
-                }
+                .clickable { onToggleExpand() }
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
