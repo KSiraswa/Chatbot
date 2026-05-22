@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.map
 class GeminiClient(apiKey: String) {
 
     private val model = GenerativeModel(
-        modelName = "gemini-3.5-flash",
+        modelName = "gemini-3.1-flash-lite",
         apiKey = apiKey,
         generationConfig = generationConfig {
             temperature = 0.7f

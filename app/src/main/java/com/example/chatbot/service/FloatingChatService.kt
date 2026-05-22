@@ -58,7 +58,7 @@ class FloatingChatService : LifecycleService(), ViewModelStoreOwner, SavedStateR
         get() = mSavedStateRegistryController.savedStateRegistry
 
     // Placeholder API Key - User should replace this
-    private val API_KEY = "AIzaSyDUWUcrL412XpmIrXiiUVSESJIBeN8RyL0"
+    private val API_KEY = "AIzaSyBe2nHRDFK8rrT76iCjFVQV6FUoS62bAQQ"
 
     override fun onCreate() {
         super.onCreate()
