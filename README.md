@@ -22,17 +22,24 @@ Below is a design mockup of the glassmorphic floating chat interface in action:
 ## ✨ Features
 
 - 🔍 **Real-time Screen Awareness**  
-  Utilizes the **Android Accessibility Service API** to extract structural text and content descriptors from active applications.
+  Utilizes the **Android Accessibility Service API** to extract structural text and content descriptors from active applications.  
+  *Source from github*
 - 📸 **On-Demand OCR Analysis**  
-  Integrated with **Google ML Kit Text Recognition** for extracting text from visual assets and graphical elements on your screen.
+  Integrated with **Google ML Kit Text Recognition** for extracting text from visual assets and graphical elements on your screen.  
+  *Done by Kritika Siraswa*
 - 🛸 **Glassmorphic Floating Overlay**  
-  Built with **Jetpack Compose**, displaying a floating overlay bubble that stays active on top of other apps, allowing seamless multitasking.
+  Built with **Jetpack Compose**, displaying a floating overlay bubble that stays active on top of other apps, allowing seamless multitasking.  
+  *Done by Kritika Siraswa*
 - 🫨 **Accelerometer Shake Trigger**  
-  Monitors physical device movement via hardware sensors; simply shake the phone to instantly wake the assistant and analyze the active screen.
+  Monitors physical device movement via hardware sensors; simply shake the phone to instantly wake the assistant and analyze the active screen.  
+  *Source from github*
 - 🖐️ **Proximity Privacy Hide**  
-  Cover the top of the phone (proximity sensor) to instantly minimize the chatbot window, keeping your conversations private.
+  Cover the top of the phone (proximity sensor) to instantly minimize the chatbot window, keeping your conversations private.  
+  *Done by Kritika Siraswa*
 - ⚡ **Gemini 3.1 Flash Integration**  
-  Uses Google’s state-of-the-art Generative AI SDK with optimized parameters (temperature, topK, topP) for lightning-fast responses.
+  Uses Google’s state-of-the-art Generative AI SDK with optimized parameters (temperature, topK, topP) for lightning-fast responses.  
+  *Done by Kritika Siraswa*
+
 
 ---
 
